@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Шахматы">
+<title>Шахматные приключения</title>
+<style>
+:root{--bg:#f4f9ee;--card:#fff;--tx:#2b3a1f;--g:#58cc02;--gd:#46a302;--lt:#fff1b8;--dk:#4fbf7f;--hint:rgba(88,204,2,.75);--lock:#d9dfd0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17200f;--card:#233018;--tx:#eef6e4;--lt:#b7c29a;--dk:#5b7a43;--lock:#33422a}}
+:root[data-theme="dark"]{--bg:#17200f;--card:#233018;--tx:#eef6e4;--lt:#b7c29a;--dk:#5b7a43;--lock:#33422a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:480px;margin:0 auto;padding:14px;text-align:center}
+h1{font-size:22px;margin:6px 0}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:700;gap:6px}
+.xp{background:var(--card);padding:6px 12px;border-radius:20px;white-space:nowrap}
+.path{display:flex;flex-direction:column;gap:14px;margin:18px 0}
+.lv{width:84px;height:84px;border-radius:50%;border:0;background:var(--g);box-shadow:0 6px 0 var(--gd);color:#fff;font-size:34px;cursor:pointer}
+.lv small{display:block;font-size:10px;font-weight:700}
+.lv.lock{background:var(--lock);box-shadow:0 6px 0 #0002;color:#8a947c;cursor:default}
+.lv.done{background:#ffc800;box-shadow:0 6px 0 #d9a600}
+.row:nth-child(4n+1){transform:translateX(-50px)}.row:nth-child(4n+3){transform:translateX(50px)}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin:10px 0;font-size:19px;line-height:1.35;text-align:left}
+.big{font-size:80px;margin:10px 0}
+#bd{display:grid;grid-template-columns:repeat(8,1fr);width:min(94vw,440px);margin:10px auto;border-radius:10px;overflow:hidden;border:3px solid var(--dk)}
+.c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;font-size:min(8vw,34px);cursor:pointer}
+.c.l{background:var(--lt)}.c.d{background:var(--dk)}
+.c.h::after{content:"";position:absolute;width:34%;height:34%;border-radius:50%;background:var(--hint)}
+.c.h.t::after{width:86%;height:86%;background:none;border:4px solid var(--hint)}
+.c.hn{animation:pl .7s infinite alternate;outline:4px solid #ffc800;outline-offset:-4px}
+@keyframes pl{to{filter:brightness(1.4)}}
+@keyframes pop{0%{transform:scale(.5)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.me{color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 0 3px #000;z-index:1;font-size:min(9vw,38px);animation:pop .3s}
+.en{color:#222;text-shadow:0 0 2px #fff;z-index:1}
+.btn{border:0;border-radius:14px;padding:13px 18px;font-size:17px;font-weight:700;color:#fff;background:var(--g);box-shadow:0 4px 0 var(--gd);margin:5px;cursor:pointer}
+.btn.s{background:#8a947c;box-shadow:0 4px 0 #66705a}.btn.y{background:#ffb300;box-shadow:0 4px 0 #cc8f00}
+#msg{min-height:28px;font-weight:700;font-size:18px;color:#d8453a}
+#win{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:9;overflow:hidden}
+#win .bx{background:var(--card);border-radius:20px;padding:26px;width:min(86vw,340px)}
+.cf{position:absolute;top:-40px;font-size:28px;animation:fl 2.5s linear forwards}
+@keyframes fl{to{transform:translateY(110vh) rotate(360deg)}}
+
+.hero{font-size:24px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ff9600,#ff4b8b,#ce82ff);border-radius:20px;padding:18px 12px;margin:10px 0;text-shadow:0 2px 0 #0003}
+.menu{display:flex;gap:12px;margin:12px 0}
+.mc{flex:1;border:0;border-radius:20px;color:#fff;font-size:42px;padding:16px 6px;box-shadow:0 6px 0 #0003;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mc b{font-size:18px}.mc small{font-size:13px;opacity:.9}
+.rc{display:flex;gap:12px;background:var(--card);border:3px solid;border-radius:18px;padding:12px;margin:12px 0;text-align:left;font-size:17px;align-items:center}
+.re{min-width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:36px;color:#fff}
+h2{margin:8px 0}.card{border-left:6px solid #ff9600}
+.btn{font-size:20px;padding:16px 22px}.lv{width:92px;height:92px}.mc{font-size:34px;padding:14px 4px}.mc b{font-size:15px}.xp{font-size:17px}
+.alb{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.st{background:var(--card);border-radius:18px;font-size:54px;padding:14px;box-shadow:0 4px 0 #0002}.st.no{opacity:.35}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="win"><div class="bx"><div class="big" id="wb" style="font-size:60px">🎉</div><h2 id="wt"></h2><p id="wp"></p><button class="btn" id="nx"></button></div></div>
+<script>
+const D={r:[[1,0],[-1,0],[0,1],[0,-1]],b:[[1,1],[1,-1],[-1,1],[-1,-1]]};D.q=D.r.concat(D.b);
+const G={r:'♜',b:'♝',q:'♛',n:'♞',k:'♚',p:'♟'};
+const L=[
+{n:'Ладья',p:'r',s:[7,0],st:[[7,5],[2,5]],c:'🐶 Бублик',sy:'Бублик — храбрый щенок-ладья. Он быстро бегает прямо: вперёд, назад и в стороны. Помоги ему собрать звёздочки!',t:'Ладья ходит прямо. Собери звёздочки!'},
+{n:'Ладья',p:'r',s:[7,0],st:[[7,6],[1,6]],w:[[7,3],[4,0]],t:'Деревья мешают! Ладья через них не ходит. Найди обход.'},
+{n:'Ладья',p:'r',s:[7,0],en:[[7,3],[4,3],[4,6]],sy:'Чёрные пешки шалят! Бублик прогоняет их: он встаёт на их клетку.',t:'Прогони всех чёрных пешек ладьёй!'},
+{n:'Слон',p:'b',s:[7,2],st:[[4,5],[1,2]],c:'🐩 Ириска',sy:'Ириска — щенок-слон. Она бегает только по косым дорожкам, по диагонали. Помоги ей собрать звёздочки!',t:'Слон ходит по косой. Собери звёздочки!'},
+{n:'Слон',p:'b',s:[7,2],st:[[5,4],[2,1],[0,3]],w:[[6,3]],t:'Дерево на пути! Слон через него не ходит. Иди в обход.'},
+{n:'Слон',p:'b',s:[7,0],en:[[4,3],[2,5],[3,6]],t:'Прогони всех чёрных пешек слоном!'},
+{n:'Ферзь',p:'q',s:[7,3],st:[[3,7],[3,2],[0,5]],c:'🐕 Пуша',sy:'Пуша — щенок-королева. Она ходит и прямо, как Бублик, и по косой, как Ириска. Она самая сильная!',t:'Ферзь ходит и прямо, и по косой. Собери звёздочки!'},
+{n:'Ферзь',p:'q',s:[7,3],en:[[4,3],[4,6],[1,6],[1,2]],t:'Прогони всех чёрных пешек ферзём!'},
+{n:'Конь',p:'n',s:[7,1],st:[[5,2],[3,3],[1,4]],c:'🐕‍🦺 Прыжок',sy:'Прыжок — щенок-конь. Он прыгает буквой «Г»: две клетки прямо и одну вбок. И может прыгать через всех!',t:'Конь прыгает буквой «Г». Собери звёздочки!'},
+{n:'Конь',p:'n',s:[7,1],en:[[5,2],[3,3],[1,4],[0,6]],t:'Прогони всех чёрных пешек конём!'},
+{n:'Король',p:'k',s:[7,4],st:[[5,5],[3,4],[2,2]],c:'🦮 Барон',sy:'Барон — щенок-король. Он важный и ходит медленно: только на одну клетку, но в любую сторону.',t:'Король ходит на одну клетку. Собери звёздочки!'},
+{n:'Король',p:'k',s:[7,4],en:[[6,5],[5,6],[4,5]],t:'Прогони всех чёрных пешек королём!'},
+{n:'Пешка',p:'p',s:[6,3],st:[[2,3]],c:'🐾 Бусинка',sy:'Бусинка — маленькая пешка. Она ходит только вперёд. В начале пути может шагнуть сразу на две клетки!',t:'Пешка ходит только вперёд. Дойди до звёздочки!'},
+{n:'Пешка бьёт',p:'p',s:[6,3],en:[[5,4],[4,3]],sy:'А шалунов Бусинка бьёт не прямо, а по косой: вперёд и чуть вбок.',t:'Пешка бьёт по косой. Прогони чёрных пешек!'},
+{n:'Пешка бьёт',p:'p',s:[6,2],en:[[5,3],[4,4],[3,3]],t:'Бей по косой, всех чёрных пешек!'},
+{z:1,n:'Мат ладьёй',p:'r',s:[7,0],o:[['k',2,6,0],['k',0,7,1]],g:[[0,0]],b:[],c:'🐱 Воришка',sy:'Хитрый кот-воришка хочет убежать! Если на короля напали и ему некуда уйти — это шах и мат. Поставь ладью так, чтобы кот не убежал!',t:'Поставь мат ладьёй. Коту должно быть некуда бежать.'},
+{z:1,n:'Мат ферзём',p:'q',s:[3,4],o:[['k',2,6,0],['k',0,7,1]],g:[[0,4],[0,1],[1,6]],b:[],t:'Поставь мат ферзём! Найди ход, после которого кот пойман.'},
+{z:1,n:'Пат',p:'q',s:[2,4],o:[['k',1,5,0],['k',0,7,1]],g:[[2,7],[5,7]],b:[[2,6]],sy:'Осторожно! Если коту некуда идти, но на него никто не нападает, это пат — ничья. Нам нужен мат, а не ничья!',t:'Не ставь пат! Найди ход, чтобы кот был пойман.'}
+];
+let st={done:0,xp:0,streak:0,last:'',voice:1,lim:1,td:'',cnt:0},cur=0,pos,S,E,W,O,mv,lv,hl=[],hs='',mg='',lock=false,AC;
+const ds=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+const yd=()=>{const d=new Date();d.setDate(d.getDate()-1);return ds(d)};
+try{Object.assign(st,JSON.parse(localStorage.getItem('ch2')||'{}'))}catch(e){}
+if(st.last!=ds(new Date())&&st.last!=yd())st.streak=0;
+const K=(a,b)=>a+','+b,$=id=>document.getElementById(id);
+function save(){try{localStorage.setItem('ch2',JSON.stringify(st))}catch(e){}}
+function snd(t){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const q={m:[[520,.08]],c:[[660,.08],[880,.12]],win:[[523,.12],[659,.12],[784,.12],[1047,.3]],bad:[[250,.3]]}[t];let a=AC.currentTime;for(const[f,d]of q){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type='triangle';g.gain.setValueAtTime(.2,a);g.gain.exponentialRampToValueAtTime(.001,a+d);o.connect(g);g.connect(AC.destination);o.start(a);o.stop(a+d);a+=d}}catch(e){}}
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ru-RU';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+const CL={r:'#1cb0f6',b:'#ce82ff',q:'#ff9600',n:'#ff4b4b',k:'#58cc02',p:'#ff86d0',z:'#00cdb0'};
+function home(){
+let h='<div class="top"><button class="xp" style="border:0" onclick="par()">⚙️</button><span><span class="xp">🔥 '+st.streak+'</span> <span class="xp">⭐ '+st.xp+'</span></span></div><div class="hero">🐾 Шахматные приключения ♟️</div><div class="menu"><button class="mc" style="background:#1cb0f6" onclick="rules()">📖<b>Правила</b></button><button class="mc" style="background:#ff9600" onclick="train()">🎯<b>Тренировка</b></button><button class="mc" style="background:#ff4b8b" onclick="album()">🌟<b>Наклейки</b></button></div><h2>🗺️ Уровни</h2><div class="path">';
+L.forEach((l,i)=>{const lk=i>st.done,dn=i<st.done,c=CL[l.z?'z':l.p];
+h+='<div class="row"><button class="lv'+(lk?' lock':'')+'" style="'+(lk?'':'background:'+c+';box-shadow:0 6px 0 '+c+'99')+'" '+(lk?'':'onclick="open_('+i+')"')+'>'+(lk?'🔒':l.z?'🐱':G[l.p]+'\uFE0E')+'<small>'+(dn?'✓ ':'')+l.n+'</small></button></div>'});
+$('app').innerHTML=h+'</div>';
+}
+function open_(i){cur=i;lv=L[i];lv.sy?story():start()}
+function story(){const cc=(lv.c||'🐾 '+lv.n).split(' ');auto(lv.sy);
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">← Назад</button></div><div class="big">'+cc[0]+'</div><h1>'+(cc[1]||lv.n)+'</h1><div class="card">'+lv.sy+'</div><button class="btn y" onclick="say(lv.sy)">🔊 Послушать</button><button class="btn" onclick="start()">Играть ▶</button>';
+}
+function start(){ms=0;auto(lv.t);
+pos=lv.s.slice();S=new Set((lv.st||[]).map(x=>K(...x)));E=new Set((lv.en||[]).map(x=>K(...x)));W=new Set((lv.w||[]).map(x=>K(...x)));
+O={};(lv.o||[]).forEach(x=>{O[K(x[1],x[2])]=x;W.add(K(x[1],x[2]))});
+mv=0;hs='';mg='';lock=false;draw();
+}
+function legal(f){
+const o=[],[r,c]=f,p=lv.p,ok=(a,b)=>a>=0&&a<8&&b>=0&&b<8&&!W.has(K(a,b));
+if('rbq'.includes(p)){for(const[d,e]of D[p]){let a=r+d,b=c+e;while(ok(a,b)){o.push([a,b]);if(E.has(K(a,b)))break;a+=d;b+=e}}}
+else if(p=='n'){for(const[d,e]of[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]])if(ok(r+d,c+e))o.push([r+d,c+e])}
+else if(p=='k'){for(const[d,e]of D.q)if(ok(r+d,c+e))o.push([r+d,c+e])}
+else{if(ok(r-1,c)&&!E.has(K(r-1,c))){o.push([r-1,c]);if(r==6&&ok(r-2,c)&&!E.has(K(r-2,c)))o.push([r-2,c])}
+for(const e of[-1,1])if(E.has(K(r-1,c+e)))o.push([r-1,c+e])}
+return o}
+function draw(){
+hl=lock?[]:legal(pos);const hh=new Set(hl.map(x=>K(...x)));let b='';
+for(let r=0;r<8;r++)for(let c=0;c<8;c++){const k=K(r,c);let x='';
+if(r==pos[0]&&c==pos[1])x='<span class="me">'+G[lv.p]+'\uFE0E</span>';
+else if(O[k])x='<span class="'+(O[k][3]?'en':'me')+'" style="animation:none">'+G[O[k][0]]+'\uFE0E</span>';
+else if(W.has(k))x='🌳';else if(S.has(k))x='⭐';else if(E.has(k))x='<span class="en">♟\uFE0E</span>';
+b+='<div class="c '+((r+c)%2?'d':'l')+(hh.has(k)?' h'+(E.has(k)?' t':''):'')+(hs==k?' hn':'')+'" data-r="'+r+'" data-c="'+c+'">'+x+'</div>'}
+const info=lv.z||lv.f?'':'<span class="xp">Осталось: '+(S.size+E.size)+'</span>';
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button>'+info+'</div><h1>'+(cur<0?'Задача '+(pi+1)+'/'+P.length:'Уровень '+(cur+1))+': '+lv.n+'</h1><div class="card">'+lv.t+'</div><div id="msg">'+mg+'</div><div id="bd">'+b+'</div><button class="btn y" onclick="hint()">💡 Подсказка</button><button class="btn y" onclick="say(lv.t)">🔊</button><button class="btn s" onclick="start()">↺</button>';
+$('bd').onclick=e=>{const t=e.target.closest('.c');if(t)go(+t.dataset.r,+t.dataset.c)};
+}
+function hint(){
+if(lock)return;
+if(lv.f){hs=K(...lv.a[0]);draw();return}
+if(lv.z){const m=legal(pos).find(x=>{const p0=pos;pos=x;const r=ev();pos=p0;return lv.goal=='check'?r=='check'||r=='mate':r==lv.goal});if(m){hs=K(...m);draw()}return}
+const q=[[pos,null]],seen=new Set([K(...pos)]);
+while(q.length){const[p,f]=q.shift();for(const m of legal(p)){const k=K(...m);if(seen.has(k))continue;seen.add(k);const fi=f||m;if(S.has(k)||E.has(k)){hs=K(...fi);draw();return}q.push([m,fi])}}
+}
+function go(r,c){
+if(lv.f)return fnd(r,c);
+if(lock||!hl.some(x=>x[0]==r&&x[1]==c))return;
+const k=K(r,c);hs='';mg='';pos=[r,c];
+if(lv.z){
+lock=true;
+const rs=ev();if(lv.goal=='check'?rs=='check'||rs=='mate':rs==lv.goal){mg='';draw();snd('win');setTimeout(win,600)}
+else{snd('bad');auto('Попробуем ещё!');mg=rs=='stale'?'Пат! Это ничья. Попробуй ещё!':rs=='mate'?'Это мат, а нужен пат!':rs=='check'?'Шах, но кот убежит! Ещё раз.':'Так не получится. Попробуй ещё!';draw();setTimeout(()=>{pos=lv.s.slice();mg='';lock=false;if(++ms>1)hint();else draw()},1800)}
+return}
+mv++;const got=S.delete(k)|E.delete(k);snd(got?'c':'m');draw();
+if(!S.size&&!E.size){lock=true;setTimeout(()=>{snd('win');win()},400)}
+}
+L[15].goal=L[16].goal=L[17].goal='mate';
+let P=[],pi=0;
+const CH=[
+{z:1,goal:'check',n:'Шах ладьёй',p:'r',s:[7,0],o:[['k',7,6,0],['k',0,4,1]],c:'🐱 Воришка',sy:'Шах — это когда на короля напали. Нападай на кота-воришку! Ему придётся защищаться.',t:'Поставь шах: нападай на чёрного короля!'},
+{z:1,goal:'check',n:'Шах слоном',p:'b',s:[7,2],o:[['k',7,6,0],['k',0,5,1]],t:'Поставь шах слоном!'},
+{z:1,goal:'check',n:'Шах ферзём',p:'q',s:[7,3],o:[['k',7,7,0],['k',1,6,1]],t:'Поставь шах ферзём!'}];
+const MT=[L[15],L[16],
+{z:1,goal:'mate',n:'Мат ладьёй',p:'r',s:[7,5],o:[['k',2,1,0],['k',0,0,1]],t:'Поставь мат ладьёй!'},
+{z:1,goal:'mate',n:'Мат ферзём',p:'q',s:[7,1],o:[['k',2,6,0],['k',0,7,1]],t:'Поставь мат ферзём!'}];
+const PT=[Object.assign({},L[17],{goal:'stale',c:'🐱 Воришка',sy:'Теперь наоборот! Найди ход, после которого коту некуда идти, но шаха нет. Это пат — ничья.',t:'Найди ход, после которого будет пат!'}),
+{z:1,goal:'stale',n:'Пат ферзём',p:'q',s:[5,2],o:[['k',3,3,0],['k',0,0,1]],t:'Найди ход, после которого будет пат!'}];
+const BD=[];'rnbqkbnr'.split('').forEach((p,c)=>{BD.push([p,7,c,0],['p',6,c,0])});
+const FN=(n,a,w)=>({f:1,n:'Найди '+w,s:[-1,-1],p:'p',o:BD,a,t:'Найди '+w+'!'});
+const FNL=[Object.assign(FN('',[[7,0],[7,7]],'ладью'),{c:'🐶 Бублик',sy:'Это шахматная доска, а это фигуры! Давай с ними познакомимся. Нажми на ту фигуру, которую я попрошу.'}),
+FN('',[[7,2],[7,5]],'слона'),FN('',[[7,1],[7,6]],'коня'),FN('',[[7,3]],'ферзя'),FN('',[[7,4]],'короля'),FN('',[0,1,2,3,4,5,6,7].map(c=>[6,c]),'пешку')];
+const PR=[CH,MT,PT,FNL];
+const ST=['🐶','🐩','🐕','🦮','🐕‍🦺','🐾','🦴','🎾','⭐','🏆','🎈','🍦','🚀','🌈','🦄','🐱','👑','🎉'];
+let ms=0;
+function auto(t){if(st.voice)say(t)}
+function fnd(r,c){
+if(lock)return;
+if(lv.a.some(x=>x[0]==r&&x[1]==c)){lock=true;snd('win');mg='Молодец!';hs='';draw();setTimeout(win,700)}
+else{snd('bad');auto('Попробуй ещё!');mg='Попробуй ещё!';if(++ms>1)hs=K(...lv.a[0]);draw()}
+}
+function album(){$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>🌟 Мои наклейки</h1><div class="card">Пройди уровень — получи наклейку! Собрано: '+Math.min(st.done,ST.length)+' из '+ST.length+'</div><div class="alb">'+ST.map((e,i)=>'<div class="st'+(i<st.done?'':' no')+'">'+(i<st.done?e:'❓')+'</div>').join('')+'</div>'}
+function par(){const a=2+Math.floor(Math.random()*5),b=2+Math.floor(Math.random()*5),r=a+b,o=[r,r+1,r-1].sort(()=>Math.random()-.5);
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>⚙️ Для родителей</h1><div class="card">Чтобы войти, решите: сколько будет '+a+' + '+b+'?</div>'+o.map(x=>'<button class="btn" onclick="'+(x==r?'par2()':'home()')+'">'+x+'</button>').join('')}
+function par2(){
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>⚙️ Для родителей</h1><div class="card">Пройдено уровней: '+st.done+' из '+L.length+'<br>Очки: '+st.xp+'<br>Серия дней: '+st.streak+'<br>Сегодня уровней: '+(st.td==ds(new Date())?st.cnt:0)+'</div><button class="btn y" onclick="tg(\'voice\')">Озвучка сама: '+(st.voice?'вкл':'выкл')+'</button><button class="btn y" onclick="tg(\'lim\')">Лимит 5 уровней в день: '+(st.lim?'вкл':'выкл')+'</button><button class="btn s" onclick="if(confirm(\'Сбросить весь прогресс?\')){st={done:0,xp:0,streak:0,last:\'\',voice:1,lim:1,td:\'\',cnt:0};save();home()}">Сбросить прогресс</button>'}
+function tg(k){st[k]=st[k]?0:1;save();par2()}
+const R=[
+['♜','Ладья','Ходит прямо: вперёд, назад, вправо и влево.','open_(0)','r'],
+['♝','Слон','Ходит по косой, по диагонали.','open_(3)','b'],
+['♛','Ферзь','Ходит и прямо, и по косой. Самая сильная фигура!','open_(6)','q'],
+['♞','Конь','Прыгает буквой «Г» и может прыгать через других.','open_(8)','n'],
+['♚','Король','Ходит на одну клетку в любую сторону. Короля надо беречь!','open_(10)','k'],
+['♟','Пешка','Ходит вперёд на одну клетку, а в начале на две. Бьёт по косой.','open_(12)','p'],
+['⚠️','Шах','Шах — это когда на короля напали. Надо спасти короля!','prac(0)','z'],
+['🏁','Мат','Мат — на короля напали, и ему некуда уйти. Ты победил!','prac(1)','z'],
+['🤝','Пат','Пат — королю некуда идти, но на него не нападают. Это ничья.','prac(2)','z']];
+function rules(){
+let h='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>📖 Правила</h1>';
+R.forEach(r=>{h+='<div class="rc" style="border-color:'+CL[r[4]]+'"><div class="re" style="background:'+CL[r[4]]+'">'+r[0]+'</div><div><b>'+r[1]+'</b><br>'+r[2]+'<br><button class="btn y" onclick="say(\''+r[1]+'. '+r[2]+'\')">🔊</button><button class="btn" onclick="'+r[3]+'">Попробовать ▶</button></div></div>'});
+$('app').innerHTML=h;
+}
+function train(){
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>🎯 Тренировка</h1><div class="menu" style="flex-direction:column">'+[['⚠️','Шах','#ff9600'],['🏁','Мат','#58cc02'],['🤝','Пат','#ce82ff'],['🧩','Доска','#1cb0f6']].map((x,i)=>'<button class="mc" style="background:'+x[2]+'" onclick="prac('+i+')">'+x[0]+'<b>'+x[1]+'</b><small>задач: '+PR[i].length+'</small></button>').join('')+'</div>';
+}
+function prac(g){P=PR[g];openP(0)}
+function openP(i){pi=i;cur=-1;lv=P[i];i==0&&lv.sy?story():start()}
+function ev(){
+let wk,bk;for(const k in O)O[k][3]?bk=O[k]:wk=O[k];
+const bs=K(bk[1],bk[2]),dd=(a,b,c,d)=>Math.max(Math.abs(a-c),Math.abs(b-d));
+W.delete(bs);const lg=legal(pos);W.add(bs);
+const at=(a,b)=>lg.some(m=>m[0]==a&&m[1]==b);
+const ck=at(bk[1],bk[2]);let esc=0;
+for(let a=-1;a<2;a++)for(let b=-1;b<2;b++){if(!a&&!b)continue;const r=bk[1]+a,c=bk[2]+b;
+if(r<0||r>7||c<0||c>7||dd(r,c,wk[1],wk[2])<2)continue;
+if(r==pos[0]&&c==pos[1]||!at(r,c))esc=1}
+return ck?(esc?'check':'mate'):(esc?'none':'stale')}
+function win(){
+const first=cur==st.done;
+if(first){st.done=Math.min(st.done+1,L.length);st.xp+=10}
+if(cur>=0){const t0=ds(new Date());if(st.td!=t0){st.td=t0;st.cnt=0}st.cnt++}
+const t=ds(new Date());if(st.last!=t){st.streak=st.last==yd()?st.streak+1:1;st.last=t}
+save();
+const pr=cur<0,last=pr?pi==P.length-1:cur==L.length-1,rest=!pr&&st.lim&&st.cnt>=5;$('wb').textContent=first?ST[cur]:'🎉';auto(['Молодец!','Ты умница!','Ура, получилось!','Отлично!'][Math.floor(Math.random()*4)]);
+$('wt').textContent=last&&!pr?'Ты прошёл все уровни! 🏆':lv.z?{check:'Шах!',mate:'Мат! Кот пойман!',stale:'Пат!'}[lv.goal]:'Отлично!';
+$('wp').textContent=(first?'+10 ⭐ · ':'')+(first?'Новая наклейка! ':'')+(rest?'На сегодня хватит! Приходи завтра 🌙 · ':'')+'Серия: 🔥 '+st.streak+(last&&!pr?'. Скоро будут новые уровни!':'');
+$('nx').textContent=last||rest?'В меню':'Дальше ▶';
+$('nx').onclick=()=>{$('win').style.display='none';$('win').querySelectorAll('.cf').forEach(e=>e.remove());rest?home():last?(pr?train():home()):pr?openP(pi+1):open_(cur+1)};
+for(let i=0;i<24;i++){const s=document.createElement('span');s.className='cf';s.textContent=['⭐','🎉','🐾','✨'][i%4];s.style.left=Math.random()*95+'%';s.style.animationDelay=Math.random()*1.2+'s';$('win').appendChild(s)}
+$('win').style.display='flex';
+}
+home();
+</script>
+</body>
+</html>
