@@ -52,6 +52,13 @@ h1{font-size:22px;margin:6px 0}
 h2{margin:8px 0}.card{border-left:6px solid #ff9600}
 .btn{font-size:20px;padding:16px 22px}.lv{width:92px;height:92px}.mc{font-size:34px;padding:14px 4px}.mc b{font-size:15px}.xp{font-size:17px}
 .alb{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.st{background:var(--card);border-radius:18px;font-size:54px;padding:14px;box-shadow:0 4px 0 #0002}.st.no{opacity:.35}
+.zone{border-radius:22px;padding:12px;color:#fff;box-shadow:0 6px 0 #0003}
+.zt{font-size:20px;font-weight:800;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;text-shadow:0 2px 0 #0003}.zt small{font-size:14px;background:#fff3;padding:4px 8px;border-radius:12px}
+.zr{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.tk{width:62px;height:62px;border-radius:50%;border:0;background:#fff;color:#333;font-size:30px;box-shadow:0 4px 0 #0003;cursor:pointer}
+.tk.lock{opacity:.5}.tk.cur{animation:pl .7s infinite alternate;outline:4px solid #ffc800}
+.dots{font-size:18px;margin:6px 0;letter-spacing:6px}.st small{display:block;font-size:12px}
+.room{background:var(--card);border-radius:20px;padding:14px;font-size:54px;margin:10px 0}.room small{display:block;font-size:15px}
 </style>
 </head>
 <body>
@@ -60,7 +67,7 @@ h2{margin:8px 0}.card{border-left:6px solid #ff9600}
 <script>
 const D={r:[[1,0],[-1,0],[0,1],[0,-1]],b:[[1,1],[1,-1],[-1,1],[-1,-1]]};D.q=D.r.concat(D.b);
 const G={r:'♜',b:'♝',q:'♛',n:'♞',k:'♚',p:'♟'};
-const L=[
+const L0=[
 {n:'Ладья',p:'r',s:[7,0],st:[[7,5],[2,5]],c:'🐶 Бублик',sy:'Бублик — храбрый щенок-ладья. Он быстро бегает прямо: вперёд, назад и в стороны. Помоги ему собрать звёздочки!',t:'Ладья ходит прямо. Собери звёздочки!'},
 {n:'Ладья',p:'r',s:[7,0],st:[[7,6],[1,6]],w:[[7,3],[4,0]],t:'Деревья мешают! Ладья через них не ходит. Найди обход.'},
 {n:'Ладья',p:'r',s:[7,0],en:[[7,3],[4,3],[4,6]],sy:'Чёрные пешки шалят! Бублик прогоняет их: он встаёт на их клетку.',t:'Прогони всех чёрных пешек ладьёй!'},
@@ -80,21 +87,28 @@ const L=[
 {z:1,n:'Мат ферзём',p:'q',s:[3,4],o:[['k',2,6,0],['k',0,7,1]],g:[[0,4],[0,1],[1,6]],b:[],t:'Поставь мат ферзём! Найди ход, после которого кот пойман.'},
 {z:1,n:'Пат',p:'q',s:[2,4],o:[['k',1,5,0],['k',0,7,1]],g:[[2,7],[5,7]],b:[[2,6]],sy:'Осторожно! Если коту некуда идти, но на него никто не нападает, это пат — ничья. Нам нужен мат, а не ничья!',t:'Не ставь пат! Найди ход, чтобы кот был пойман.'}
 ];
-let st={done:0,xp:0,streak:0,last:'',voice:1,lim:1,td:'',cnt:0},cur=0,pos,S,E,W,O,mv,lv,hl=[],hs='',mg='',lock=false,AC;
+let st={done:0,xp:0,streak:0,last:'',voice:1,lim:1,td:'',cnt:0,cups:0,pend:0,rw:[],dn:[]},cur=0,pos,S,E,W,O,mv,lv,hl=[],hs='',mg='',lock=false,AC;
 const ds=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
 const yd=()=>{const d=new Date();d.setDate(d.getDate()-1);return ds(d)};
-try{Object.assign(st,JSON.parse(localStorage.getItem('ch2')||'{}'))}catch(e){}
+try{Object.assign(st,JSON.parse(localStorage.getItem('ch3')||'{}'))}catch(e){}
 if(st.last!=ds(new Date())&&st.last!=yd())st.streak=0;
+if(!st.dn.length&&st.done)st.dn=[...Array(st.done).keys()];
 const K=(a,b)=>a+','+b,$=id=>document.getElementById(id);
-function save(){try{localStorage.setItem('ch2',JSON.stringify(st))}catch(e){}}
+function save(){try{localStorage.setItem('ch3',JSON.stringify(st))}catch(e){}}
 function snd(t){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const q={m:[[520,.08]],c:[[660,.08],[880,.12]],win:[[523,.12],[659,.12],[784,.12],[1047,.3]],bad:[[250,.3]]}[t];let a=AC.currentTime;for(const[f,d]of q){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type='triangle';g.gain.setValueAtTime(.2,a);g.gain.exponentialRampToValueAtTime(.001,a+d);o.connect(g);g.connect(AC.destination);o.start(a);o.stop(a+d);a+=d}}catch(e){}}
 function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ru-RU';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
 const CL={r:'#1cb0f6',b:'#ce82ff',q:'#ff9600',n:'#ff4b4b',k:'#58cc02',p:'#ff86d0',z:'#00cdb0'};
+const pl=n=>n%10==1&&n%100!=11?'задание':n%10>1&&n%10<5&&(n%100<10||n%100>19)?'задания':'заданий';
+function ico(t){return t.z?'🐱':t.f?'🔍':t.ch=='feed'?'🍎':t.ch=='yn'?'❓':t.ch=='kg'?'👑':t.ic?'🏠':G[t.p]+'\uFE0E'}
 function home(){
-let h='<div class="top"><button class="xp" style="border:0" onclick="par()">⚙️</button><span><span class="xp">🔥 '+st.streak+'</span> <span class="xp">⭐ '+st.xp+'</span></span></div><div class="hero">🐾 Шахматные приключения ♟️</div><div class="menu"><button class="mc" style="background:#1cb0f6" onclick="rules()">📖<b>Правила</b></button><button class="mc" style="background:#ff9600" onclick="train()">🎯<b>Тренировка</b></button><button class="mc" style="background:#ff4b8b" onclick="album()">🌟<b>Наклейки</b></button></div><h2>🗺️ Уровни</h2><div class="path">';
-L.forEach((l,i)=>{const lk=i>st.done,dn=i<st.done,c=CL[l.z?'z':l.p];
-h+='<div class="row"><button class="lv'+(lk?' lock':'')+'" style="'+(lk?'':'background:'+c+';box-shadow:0 6px 0 '+c+'99')+'" '+(lk?'':'onclick="open_('+i+')"')+'>'+(lk?'🔒':l.z?'🐱':G[l.p]+'\uFE0E')+'<small>'+(dn?'✓ ':'')+l.n+'</small></button></div>'});
-$('app').innerHTML=h+'</div>';
+const td=st.td==ds(new Date())?st.cnt:0;
+let h='<div class="top"><button class="xp" style="border:0" onclick="par()">⚙️</button><span><span class="xp">🔥 '+st.streak+'</span> <span class="xp">⭐ '+st.xp+'</span></span></div><div class="hero">🌸 Приключение Эмили 🌸</div>'+(td?'<div class="card">⭐ Сегодня Эмили прошла '+td+' '+pl(td)+'!</div>':'')+'<div class="menu"><button class="mc" style="background:#1cb0f6" onclick="rules()">📖<b>Правила</b></button><button class="mc" style="background:#ff9600" onclick="train()">🎯<b>Тренировка</b></button><button class="mc" style="background:#ff4b8b" onclick="album()">🏆<b>Награды</b></button></div>';
+const nx=L.findIndex((t,i)=>!st.dn.includes(i));
+Z.forEach((z,zi)=>{const lk=0,dn=z.t.filter((t,j)=>st.dn.includes(z.a+j)).length;
+h+=(zi?'<div class="dots">🐾🐾🐾</div>':'')+'<div class="zone" style="background:'+z.c+(lk?';filter:grayscale(.7)':'')+'"><div class="zt"><span>'+z.e+' '+z.n+(dn==z.t.length?' 🏅':'')+'</span><small>'+dn+'/'+z.t.length+' ⭐</small></div><div class="zr">';
+z.t.forEach((t,j)=>{const i=z.a+j,l=0;h+='<button class="tk'+(i==nx?' cur':'')+(l?' lock':'')+'" '+(l?'':'onclick="open_('+i+')"')+'>'+(st.dn.includes(i)?'✓':ico(t))+'</button>'});
+h+='</div></div>'});
+$('app').innerHTML=h;
 }
 function open_(i){cur=i;lv=L[i];lv.sy?story():start()}
 function story(){const cc=(lv.c||'🐾 '+lv.n).split(' ');auto(lv.sy);
@@ -103,7 +117,7 @@ $('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">← 
 function start(){ms=0;auto(lv.t);
 pos=lv.s.slice();S=new Set((lv.st||[]).map(x=>K(...x)));E=new Set((lv.en||[]).map(x=>K(...x)));W=new Set((lv.w||[]).map(x=>K(...x)));
 O={};(lv.o||[]).forEach(x=>{O[K(x[1],x[2])]=x;W.add(K(x[1],x[2]))});
-mv=0;hs='';mg='';lock=false;draw();
+IT={};(lv.it||[]).forEach(x=>IT[K(x[0],x[1])]=x[2]);mv=0;hs='';mg='';lock=false;draw();
 }
 function legal(f){
 const o=[],[r,c]=f,p=lv.p,ok=(a,b)=>a>=0&&a<8&&b>=0&&b<8&&!W.has(K(a,b));
@@ -114,14 +128,14 @@ else{if(ok(r-1,c)&&!E.has(K(r-1,c))){o.push([r-1,c]);if(r==6&&ok(r-2,c)&&!E.has(
 for(const e of[-1,1])if(E.has(K(r-1,c+e)))o.push([r-1,c+e])}
 return o}
 function draw(){
-hl=lock?[]:legal(pos);const hh=new Set(hl.map(x=>K(...x)));let b='';
+hl=lock||lv.ch||lv.f?[]:legal(pos);const hh=new Set();let b='';
 for(let r=0;r<8;r++)for(let c=0;c<8;c++){const k=K(r,c);let x='';
 if(r==pos[0]&&c==pos[1])x='<span class="me">'+G[lv.p]+'\uFE0E</span>';
 else if(O[k])x='<span class="'+(O[k][3]?'en':'me')+'" style="animation:none">'+G[O[k][0]]+'\uFE0E</span>';
-else if(W.has(k))x='🌳';else if(S.has(k))x='⭐';else if(E.has(k))x='<span class="en">♟\uFE0E</span>';
+else if(IT[k])x=IT[k];else if(W.has(k))x='🌳';else if(S.has(k))x=lv.ic||'⭐';else if(E.has(k))x='<span class="en">♟\uFE0E</span>';
 b+='<div class="c '+((r+c)%2?'d':'l')+(hh.has(k)?' h'+(E.has(k)?' t':''):'')+(hs==k?' hn':'')+'" data-r="'+r+'" data-c="'+c+'">'+x+'</div>'}
-const info=lv.z||lv.f?'':'<span class="xp">Осталось: '+(S.size+E.size)+'</span>';
-$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button>'+info+'</div><h1>'+(cur<0?'Задача '+(pi+1)+'/'+P.length:'Уровень '+(cur+1))+': '+lv.n+'</h1><div class="card">'+lv.t+'</div><div id="msg">'+mg+'</div><div id="bd">'+b+'</div><button class="btn y" onclick="hint()">💡 Подсказка</button><button class="btn y" onclick="say(lv.t)">🔊</button><button class="btn s" onclick="start()">↺</button>';
+const info=lv.z||lv.f||lv.ch?'':'<span class="xp">Осталось: '+(S.size+E.size)+'</span>';
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button>'+info+'</div><h1>'+(cur<0?'Задача '+(pi+1)+'/'+P.length:Z[lv.zi].e+' '+Z[lv.zi].n)+': '+lv.n+'</h1><div class="card">'+lv.t+'</div><div id="msg">'+mg+'</div><div id="bd">'+b+'</div>'+(lv.ch?'':'<button class="btn y" onclick="hint()">💡 Подсказка</button>')+(lv.ch=='yn'?'<button class="btn" onclick="yn(1)">✅ Да</button><button class="btn" onclick="yn(0)">❌ Нет</button>':'')+'<button class="btn y" onclick="say(lv.t)">🔊</button><button class="btn s" onclick="start()">↺</button>';
 $('bd').onclick=e=>{const t=e.target.closest('.c');if(t)go(+t.dataset.r,+t.dataset.c)};
 }
 function hint(){
@@ -133,6 +147,7 @@ while(q.length){const[p,f]=q.shift();for(const m of legal(p)){const k=K(...m);if
 }
 function go(r,c){
 if(lv.f)return fnd(r,c);
+if(lv.ch)return chs(r,c);
 if(lock||!hl.some(x=>x[0]==r&&x[1]==c))return;
 const k=K(r,c);hs='';mg='';pos=[r,c];
 if(lv.z){
@@ -143,16 +158,16 @@ return}
 mv++;const got=S.delete(k)|E.delete(k);snd(got?'c':'m');draw();
 if(!S.size&&!E.size){lock=true;setTimeout(()=>{snd('win');win()},400)}
 }
-L[15].goal=L[16].goal=L[17].goal='mate';
+L0[15].goal=L0[16].goal=L0[17].goal='mate';
 let P=[],pi=0;
 const CH=[
 {z:1,goal:'check',n:'Шах ладьёй',p:'r',s:[7,0],o:[['k',7,6,0],['k',0,4,1]],c:'🐱 Воришка',sy:'Шах — это когда на короля напали. Нападай на кота-воришку! Ему придётся защищаться.',t:'Поставь шах: нападай на чёрного короля!'},
 {z:1,goal:'check',n:'Шах слоном',p:'b',s:[7,2],o:[['k',7,6,0],['k',0,5,1]],t:'Поставь шах слоном!'},
 {z:1,goal:'check',n:'Шах ферзём',p:'q',s:[7,3],o:[['k',7,7,0],['k',1,6,1]],t:'Поставь шах ферзём!'}];
-const MT=[L[15],L[16],
+const MT=[L0[15],L0[16],
 {z:1,goal:'mate',n:'Мат ладьёй',p:'r',s:[7,5],o:[['k',2,1,0],['k',0,0,1]],t:'Поставь мат ладьёй!'},
 {z:1,goal:'mate',n:'Мат ферзём',p:'q',s:[7,1],o:[['k',2,6,0],['k',0,7,1]],t:'Поставь мат ферзём!'}];
-const PT=[Object.assign({},L[17],{goal:'stale',c:'🐱 Воришка',sy:'Теперь наоборот! Найди ход, после которого коту некуда идти, но шаха нет. Это пат — ничья.',t:'Найди ход, после которого будет пат!'}),
+const PT=[Object.assign({},L0[17],{goal:'stale',c:'🐱 Воришка',sy:'Теперь наоборот! Найди ход, после которого коту некуда идти, но шаха нет. Это пат — ничья.',t:'Найди ход, после которого будет пат!'}),
 {z:1,goal:'stale',n:'Пат ферзём',p:'q',s:[5,2],o:[['k',3,3,0],['k',0,0,1]],t:'Найди ход, после которого будет пат!'}];
 const BD=[];'rnbqkbnr'.split('').forEach((p,c)=>{BD.push([p,7,c,0],['p',6,c,0])});
 const FN=(n,a,w)=>({f:1,n:'Найди '+w,s:[-1,-1],p:'p',o:BD,a,t:'Найди '+w+'!'});
@@ -167,19 +182,18 @@ if(lock)return;
 if(lv.a.some(x=>x[0]==r&&x[1]==c)){lock=true;snd('win');mg='Молодец!';hs='';draw();setTimeout(win,700)}
 else{snd('bad');auto('Попробуй ещё!');mg='Попробуй ещё!';if(++ms>1)hs=K(...lv.a[0]);draw()}
 }
-function album(){$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>🌟 Мои наклейки</h1><div class="card">Пройди уровень — получи наклейку! Собрано: '+Math.min(st.done,ST.length)+' из '+ST.length+'</div><div class="alb">'+ST.map((e,i)=>'<div class="st'+(i<st.done?'':' no')+'">'+(i<st.done?e:'❓')+'</div>').join('')+'</div>'}
 function par(){const a=2+Math.floor(Math.random()*5),b=2+Math.floor(Math.random()*5),r=a+b,o=[r,r+1,r-1].sort(()=>Math.random()-.5);
 $('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>⚙️ Для родителей</h1><div class="card">Чтобы войти, решите: сколько будет '+a+' + '+b+'?</div>'+o.map(x=>'<button class="btn" onclick="'+(x==r?'par2()':'home()')+'">'+x+'</button>').join('')}
 function par2(){
-$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>⚙️ Для родителей</h1><div class="card">Пройдено уровней: '+st.done+' из '+L.length+'<br>Очки: '+st.xp+'<br>Серия дней: '+st.streak+'<br>Сегодня уровней: '+(st.td==ds(new Date())?st.cnt:0)+'</div><button class="btn y" onclick="tg(\'voice\')">Озвучка сама: '+(st.voice?'вкл':'выкл')+'</button><button class="btn y" onclick="tg(\'lim\')">Лимит 5 уровней в день: '+(st.lim?'вкл':'выкл')+'</button><button class="btn s" onclick="if(confirm(\'Сбросить весь прогресс?\')){st={done:0,xp:0,streak:0,last:\'\',voice:1,lim:1,td:\'\',cnt:0};save();home()}">Сбросить прогресс</button>'}
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>⚙️ Для родителей</h1><div class="card">Пройдено уровней: '+st.done+' из '+L.length+'<br>Очки: '+st.xp+'<br>Серия дней: '+st.streak+'<br>Сегодня уровней: '+(st.td==ds(new Date())?st.cnt:0)+'</div><button class="btn y" onclick="tg(\'voice\')">Озвучка сама: '+(st.voice?'вкл':'выкл')+'</button><button class="btn y" onclick="tg(\'lim\')">Лимит 5 уровней в день: '+(st.lim?'вкл':'выкл')+'</button><button class="btn s" onclick="if(confirm(\'Сбросить весь прогресс?\')){st={done:0,xp:0,streak:0,last:\'\',voice:1,lim:1,td:\'\',cnt:0,dn:[],cups:0,pend:0,rw:[]};save();home()}">Сбросить прогресс</button>'}
 function tg(k){st[k]=st[k]?0:1;save();par2()}
 const R=[
-['♜','Ладья','Ходит прямо: вперёд, назад, вправо и влево.','open_(0)','r'],
-['♝','Слон','Ходит по косой, по диагонали.','open_(3)','b'],
-['♛','Ферзь','Ходит и прямо, и по косой. Самая сильная фигура!','open_(6)','q'],
-['♞','Конь','Прыгает буквой «Г» и может прыгать через других.','open_(8)','n'],
-['♚','Король','Ходит на одну клетку в любую сторону. Короля надо беречь!','open_(10)','k'],
-['♟','Пешка','Ходит вперёд на одну клетку, а в начале на две. Бьёт по косой.','open_(12)','p'],
+['♜','Ладья','Ходит прямо: вперёд, назад, вправо и влево.','oL(0)','r'],
+['♝','Слон','Ходит по косой, по диагонали.','oL(3)','b'],
+['♛','Ферзь','Ходит и прямо, и по косой. Самая сильная фигура!','oL(6)','q'],
+['♞','Конь','Прыгает буквой «Г» и может прыгать через других.','oL(8)','n'],
+['♚','Король','Ходит на одну клетку в любую сторону. Короля надо беречь!','oL(10)','k'],
+['♟','Пешка','Ходит вперёд на одну клетку, а в начале на две. Бьёт по косой.','oL(12)','p'],
 ['⚠️','Шах','Шах — это когда на короля напали. Надо спасти короля!','prac(0)','z'],
 ['🏁','Мат','Мат — на короля напали, и ему некуда уйти. Ты победил!','prac(1)','z'],
 ['🤝','Пат','Пат — королю некуда идти, но на него не нападают. Это ничья.','prac(2)','z']];
@@ -203,17 +217,58 @@ for(let a=-1;a<2;a++)for(let b=-1;b<2;b++){if(!a&&!b)continue;const r=bk[1]+a,c=
 if(r<0||r>7||c<0||c>7||dd(r,c,wk[1],wk[2])<2)continue;
 if(r==pos[0]&&c==pos[1]||!at(r,c))esc=1}
 return ck?(esc?'check':'mate'):(esc?'none':'stale')}
+let IT={};
+const RS=(n,p,s,st,t,w,x)=>Object.assign({n,p,s,st,w:w||[],ic:'🏠',t},x);
+const FD=(n,p,s,c,t,b,x)=>Object.assign({ch:'feed',n,p,s,it:c.map(q=>[q[0],q[1],'🍎']),t,bad:b,good:'ХРУМ! Вкусно! 🍎'},x);
+const YN=(n,p,s,c,e,a,t,x)=>Object.assign({ch:'yn',n,p,s,it:[[c[0],c[1],e]],ans:a,t},x);
+const KG=(n,s,e,c,t,x)=>Object.assign({ch:'kg',n,p:'k',s,o:[e],it:c.map(q=>[q[0],q[1],'❓']),t,bad:'ОПАСНО! Там король под ударом!',good:'Ура! Король спасён! Это был ШАХ!',wt:'Шах!'},x);
+const YS={c:'🐾 Бусинка',sy:'Давай поиграем: можно ли съесть? Если фигура может достать до угощения за один ход, отвечай «Да». Если нет, отвечай «Нет».'};
+const Z=[
+{e:'🏠',n:'Дом Эмили',c:'#ff86d0',m:'Медаль знатока доски',t:[FNL[0],FNL[3],FNL[4]]},
+{e:'🏰',n:'Шахматный замок',c:'#ce82ff',m:'Медаль мастера пешек',t:[L0[12],L0[13],YN('Можно ли съесть?','p',[6,3],[5,4],'⭐',true,'Пешка может съесть звёздочку?',YS),YN('Можно ли съесть?','p',[6,3],[6,4],'⭐',false,'Пешка может съесть звёздочку?'),L0[14]]},
+{e:'🌳',n:'Лес коня',c:'#3fae2a',m:'Медаль храброго коня',t:[L0[8],RS('Спаси коня','n',[7,1],[[5,2]],'Конь потерялся! Помоги ему дойти до домика.',0,{c:'🐴 Прыжок',sy:'Конь потерялся в лесу! Помоги ему добраться до домика. Нажми на клетку, куда он может прыгнуть.'}),
+FD('Накорми коня','n',[7,1],[[5,1],[5,2],[7,4]],'Конь голодный! Нажми на яблоко, которое он может съесть.','Ой! Конь так не прыгает 🐴',{c:'🐴 Прыжок',sy:'Прыжок проголодался! Он любит яблоки, но достаёт только те, до которых может допрыгнуть буквой «Г».'}),
+RS('Спаси коня','n',[7,1],[[3,3]],'Конь опять потерялся! Теперь ему нужно два прыжка.'),YN('Можно ли съесть?','n',[7,1],[5,2],'🍎',true,'Конь может съесть яблоко?'),YN('Можно ли съесть?','n',[7,1],[6,1],'🍎',false,'Конь может съесть яблоко?'),L0[9]]},
+{e:'🏔',n:'Гора слона',c:'#1cb0f6',m:'Медаль ловкого слона',t:[L0[3],L0[4],RS('Спаси слона','b',[7,2],[[4,5]],'Слон потерялся на горе! Помоги ему добраться до домика.'),FD('Накорми слона','b',[7,2],[[4,2],[4,5],[7,5]],'Слон голодный! Какое яблоко он съест?','Ой! Слон так не ходит 🐘'),YN('Можно ли съесть?','b',[7,2],[4,5],'🔴',true,'Слон может съесть красный шарик?'),YN('Можно ли съесть?','b',[7,2],[7,5],'🔴',false,'Слон может съесть красный шарик?'),L0[5]]},
+{e:'🗼',n:'Башня ладьи',c:'#ff9600',m:'Медаль умной ладьи',t:[L0[0],L0[1],RS('Спаси ладью','r',[7,0],[[2,5]],'Ладья потерялась! Деревья мешают. Найди дорогу к домику.',[[7,3]]),FD('Накорми ладью','r',[7,0],[[4,3],[7,6],[5,2]],'Ладья голодная! Какое яблоко она съест?','Ой! Ладья так не ходит 🏰'),YN('Можно ли съесть?','r',[7,0],[7,6],'🟢',true,'Ладья может съесть зелёный шарик?'),L0[2]]},
+{e:'👑',n:'Дворец короля',c:'#e8505b',m:'Медаль защитника короля',t:[L0[10],L0[11],FD('Накорми короля','k',[7,4],[[5,4],[6,5],[7,7]],'Король голодный! Какое яблоко он съест? Король ходит на одну клетку.','Ой! Король так далеко не ходит 👑'),
+KG('Защити короля',[7,4],['r',7,0,1],[[7,3],[7,5],[6,4]],'🚨 ОПАСНО! Королю угрожает ладья! Куда ему убежать?',{c:'👑 Король',sy:'Беда! На короля напала вражеская ладья! Помоги ему убежать в безопасное место. Когда на короля нападают, это называется «шах».'}),
+KG('Защити короля',[4,5],['r',0,5,1],[[3,5],[5,5],[4,6]],'🚨 ОПАСНО! Королю угрожает ладья! Куда ему убежать?'),
+KG('Защити короля',[4,4],['b',0,0,1],[[3,3],[5,5],[4,5]],'🚨 ОПАСНО! Королю угрожает слон! Куда ему убежать?')]},
+{e:'✨',n:'Королевство шахмат',c:'#e6a800',m:'Медаль шахматной принцессы',t:[L0[6],L0[7],CH[0],CH[1],CH[2],L0[15],L0[16],L0[17]]}];
+let a0=0;Z.forEach((z,zi)=>{z.a=a0;a0+=z.t.length;z.t.forEach(t=>t.zi=zi)});
+const L=Z.flatMap(z=>z.t);
+function oL(i){open_(L.indexOf(L0[i]))}
+function atk(t,r,c){const p0=lv.p;lv.p=t;const l=legal([r,c]);lv.p=p0;return l}
+function chs(r,c){
+if(lock||!IT[K(r,c)])return;
+const ok=lv.ch=='kg'?!atk(lv.o[0][0],lv.o[0][1],lv.o[0][2]).some(m=>m[0]==r&&m[1]==c):legal(pos).some(m=>m[0]==r&&m[1]==c);
+if(ok){lock=true;snd('win');mg=lv.good;draw();setTimeout(win,1000)}
+else{snd('bad');auto(lv.bad);mg=lv.bad;draw()}
+}
+function yn(v){if(lock)return;if(!!v==lv.ans){lock=true;snd('win');mg='Верно!';draw();setTimeout(win,700)}else{snd('bad');auto('Подумай ещё!');mg='Подумай ещё!';draw()}}
+function zrem(){const z=Z[L[cur].zi],n=z.t.filter((t,j)=>!st.dn.includes(z.a+j)).length;return n?'До конца зоны «'+z.n+'»: '+n+' '+pl(n)+'. ':'Зона пройдена! '}
+const RW=[['👑','Корона'],['👗','Платье'],['🐱','Питомец'],['🏠','Домик'],['🌈','Фон']];
+function album(){
+const rw=st.rw||[];
+$('app').innerHTML='<div class="top"><button class="btn s" onclick="home()">←</button></div><h1>🏆 Награды Эмили</h1><div class="card">Кубков: '+(st.cups||0)+' · Звёздочек: '+st.xp+'<br>Каждые 10 заданий — кубок и подарок!</div><h2>🎀 Мой уголок</h2><div class="room" style="'+(rw.includes('🌈')?'background:linear-gradient(#ffd6e8,#d6f0ff,#e8ffd6)':'')+'">👧'+rw.filter(x=>x!='🌈').join('')+(rw.length?'':'<small>Подарки появятся за кубки!</small>')+'</div><h2>🏅 Медали</h2><div class="alb">'+Z.map(z=>{const o=z.t.every((t,j)=>st.dn.includes(z.a+j));return '<div class="st'+(o?'':' no')+'">'+(o?'🏅':'❓')+'<small>'+(o?z.m:'???')+'</small></div>'}).join('')+'</div>'}
+function rw(){
+const av=RW.filter(x=>!(st.rw||[]).includes(x[0]));
+if(!av.length){st.pend=0;save();return home()}
+$('app').innerHTML='<h1>🏆 Кубок!</h1><div class="card">Эмили получила шахматный кубок! Выбери подарок:</div><div class="alb">'+av.map(x=>'<button class="st" style="border:0;font-size:46px" onclick="pick(\''+x[0]+'\')">'+x[0]+'<small>'+x[1]+'</small></button>').join('')+'</div>';
+auto('Эмили получила кубок! Выбери подарок.')}
+function pick(e){st.rw=st.rw||[];if(!st.rw.includes(e))st.rw.push(e);st.pend--;save();snd('c');st.pend>0?rw():home()}
 function win(){
-const first=cur==st.done;
-if(first){st.done=Math.min(st.done+1,L.length);st.xp+=10}
+const first=cur>=0&&!st.dn.includes(cur);
+if(first){st.dn.push(cur);st.done=st.dn.length;st.xp+=1;if(st.done%10==0){st.cups=(st.cups||0)+1;st.pend=(st.pend||0)+1}}
 if(cur>=0){const t0=ds(new Date());if(st.td!=t0){st.td=t0;st.cnt=0}st.cnt++}
 const t=ds(new Date());if(st.last!=t){st.streak=st.last==yd()?st.streak+1:1;st.last=t}
 save();
-const pr=cur<0,last=pr?pi==P.length-1:cur==L.length-1,rest=!pr&&st.lim&&st.cnt>=5;$('wb').textContent=first?ST[cur]:'🎉';auto(['Молодец!','Ты умница!','Ура, получилось!','Отлично!'][Math.floor(Math.random()*4)]);
-$('wt').textContent=last&&!pr?'Ты прошёл все уровни! 🏆':lv.z?{check:'Шах!',mate:'Мат! Кот пойман!',stale:'Пат!'}[lv.goal]:'Отлично!';
-$('wp').textContent=(first?'+10 ⭐ · ':'')+(first?'Новая наклейка! ':'')+(rest?'На сегодня хватит! Приходи завтра 🌙 · ':'')+'Серия: 🔥 '+st.streak+(last&&!pr?'. Скоро будут новые уровни!':'');
+const pr=cur<0,last=pr?pi==P.length-1:cur==L.length-1,rest=!pr&&st.lim&&st.cnt>=5,cup=first&&st.done%10==0;$('wb').textContent=cup?'🏆':first?'⭐':'🎉';auto(['Молодец!','Ты умница!','Ура, получилось!','Отлично!'][Math.floor(Math.random()*4)]);
+$('wt').textContent=cup?'Эмили получила кубок! 🏆':last&&!pr?(st.dn.length>=L.length?'Ты прошла все задания! 🏆':'Это последнее задание!'):lv.z?{check:'Шах!',mate:'Мат! Кот пойман!',stale:'Пат!'}[lv.goal]:lv.wt||'Отлично!';
+$('wp').textContent=(first?'⭐ Звёздочка для Эмили! '+zrem():'')+(rest?'На сегодня хватит! Приходи завтра 🌙 · ':'')+'Серия: 🔥 '+st.streak+(last&&!pr?'. Скоро будут новые уровни!':'');
 $('nx').textContent=last||rest?'В меню':'Дальше ▶';
-$('nx').onclick=()=>{$('win').style.display='none';$('win').querySelectorAll('.cf').forEach(e=>e.remove());rest?home():last?(pr?train():home()):pr?openP(pi+1):open_(cur+1)};
+$('nx').onclick=()=>{$('win').style.display='none';$('win').querySelectorAll('.cf').forEach(e=>e.remove());st.pend>0?rw():rest?home():last?(pr?train():home()):pr?openP(pi+1):open_(cur+1)};
 for(let i=0;i<24;i++){const s=document.createElement('span');s.className='cf';s.textContent=['⭐','🎉','🐾','✨'][i%4];s.style.left=Math.random()*95+'%';s.style.animationDelay=Math.random()*1.2+'s';$('win').appendChild(s)}
 $('win').style.display='flex';
 }
